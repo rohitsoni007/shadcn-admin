@@ -114,7 +114,279 @@
   * {
     @apply border-border outline-ring/50;
   }
+  
+  html {
+    /* Smooth theme transitions */
+    transition: color 0.3s ease, background-color 0.3s ease;
+    /* Improve text rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  
   body {
     @apply bg-background text-foreground;
+    /* Ensure smooth transitions for all theme changes */
+    transition: color 0.3s ease, background-color 0.3s ease;
+    /* Improve line height for readability */
+    line-height: 1.6;
+  }
+  
+  /* Enhanced focus styles for accessibility */
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+  
+  /* Ensure proper contrast for interactive elements */
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  a:focus-visible {
+    @apply ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Skip link styles */
+  .skip-link {
+    position: absolute;
+    left: -10000px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .skip-link:focus {
+    position: fixed;
+    left: 1rem;
+    top: 1rem;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    z-index: 9999;
+    padding: 0.5rem 1rem;
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border-radius: 0.375rem;
+    text-decoration: none;
+    font-weight: 500;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  }
+
+  /* Screen reader only content */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    * {
+      border-color: ButtonText;
+    }
+    
+    button, [role="button"] {
+      border: 2px solid ButtonText;
+    }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Touch device optimizations */
+  @media (hover: none) and (pointer: coarse) {
+    /* Increase touch targets */
+    button,
+    [role="button"],
+    input,
+    select,
+    textarea,
+    a {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    /* Remove hover effects on touch devices */
+    *:hover {
+      background-color: inherit;
+      color: inherit;
+    }
+
+    /* Improve touch scrolling */
+    * {
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Prevent zoom on input focus */
+    input,
+    select,
+    textarea {
+      font-size: 16px;
+    }
+
+    /* Improve button touch feedback */
+    button:active,
+    [role="button"]:active {
+      transform: scale(0.98);
+      transition: transform 0.1s ease;
+    }
+  }
+
+  /* Mobile-specific styles */
+  @media (max-width: 767px) {
+    /* Adjust padding for mobile */
+    .mobile-padding {
+      padding: 1rem;
+    }
+
+    /* Stack elements vertically on mobile */
+    .mobile-stack {
+      flex-direction: column;
+    }
+
+    /* Hide elements on mobile */
+    .mobile-hidden {
+      display: none;
+    }
+
+    /* Full width on mobile */
+    .mobile-full-width {
+      width: 100%;
+    }
+
+    /* Adjust font sizes for mobile */
+    h1 { font-size: 1.75rem; }
+    h2 { font-size: 1.5rem; }
+    h3 { font-size: 1.25rem; }
+    
+    /* Improve mobile navigation */
+    .mobile-nav-item {
+      padding: 0.75rem 1rem;
+      min-height: 48px;
+    }
+
+    /* Add bottom padding for mobile navigation */
+    main {
+      padding-bottom: 80px;
+    }
+  }
+
+  /* Tablet-specific styles */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    /* Tablet optimizations */
+    .tablet-columns {
+      column-count: 2;
+      column-gap: 2rem;
+    }
+
+    /* Adjust sidebar for tablet */
+    .tablet-sidebar {
+      width: 240px;
+    }
+  }
+
+  /* Large screen optimizations */
+  @media (min-width: 1440px) {
+    /* Prevent excessive line lengths */
+    .max-reading-width {
+      max-width: 65ch;
+    }
+
+    /* Optimize for large screens */
+    .large-screen-grid {
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    }
+  }
+
+  /* Print styles */
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+    
+    * {
+      background: transparent !important;
+      color: black !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
+    }
+    
+    a,
+    a:visited {
+      text-decoration: underline;
+    }
+    
+    a[href]:after {
+      content: " (" attr(href) ")";
+    }
+    
+    abbr[title]:after {
+      content: " (" attr(title) ")";
+    }
+  }
+
+  /* React Grid Layout Styles */
+  .react-grid-layout {
+    position: relative;
+  }
+
+  .react-grid-item {
+    transition: all 200ms ease;
+    transition-property: left, top, width, height;
+  }
+
+  .react-grid-item.cssTransforms {
+    transition-property: transform, width, height;
+  }
+
+  .react-grid-item > .react-resizable-handle {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    bottom: 0;
+    right: 0;
+    background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNiIgaGVpZ2h0PSI2IiB2aWV3Qm94PSIwIDAgNiA2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZG90cyBmaWxsPSIjODg4IiBkPSJtMTUgMTJjMCAuNTUyLS40NDggMS0xIDFzLTEtLjQ0OC0xLTEgLjQ0OC0xIDEtMSAxIC40NDggMSAxem0wIDRjMCAuNTUyLS40NDggMS0xIDFzLTEtLjQ0OC0xLTEgLjQ0OC0xIDEtMSAxIC40NDggMSAxem0wIDRjMCAuNTUyLS40NDggMS0xIDFzLTEtLjQ0OC0xLTEgLjQ0OC0xIDEtMSAxIC40NDggMSAxem0tNS00YzAtLjU1Mi40NDgtMSAxLTFzMSAuNDQ4IDEgMS0uNDQ4IDEtMSAxLTEtLjQ0OC0xLTF6bTAgNGMwLS41NTIuNDQ4LTEgMS0xczEgLjQ0OCAxIDEtLjQ0OCAxLTEgMS0xLS40NDgtMS0xem0wIDRjMC0uNTUyLjQ0OC0xIDEtMXMxIC40NDggMSAxLS40NDggMS0xIDEtMS0uNDQ4LTEtMXptNS0xMmMwLS41NTIuNDQ4LTEgMS0xczEgLjQ0OCAxIDEtLjQ0OCAxLTEgMS0xLS40NDgtMS0xem0wIDRjMC0uNTUyLjQ0OC0xIDEtMXMxIC40NDggMSAxLS40NDggMS0xIDEtMS0uNDQ4LTEtMXptMCA0YzAtLjU1Mi40NDgtMSAxLTFzMSAuNDQ4IDEgMS0uNDQ4IDEtMSAxLTEtLjQ0OC0xLTF6Ii8+Cjwvc3ZnPgo=');
+    background-position: bottom right;
+    padding: 0 3px 3px 0;
+    background-repeat: no-repeat;
+    background-origin: content-box;
+    box-sizing: border-box;
+    cursor: se-resize;
+    opacity: 0.4;
+  }
+
+  .react-grid-item:hover > .react-resizable-handle {
+    opacity: 0.8;
+  }
+
+  .dashboard-grid.dragging .react-grid-item {
+    transition: none;
+  }
+
+  .react-grid-placeholder {
+    background: hsl(var(--primary) / 0.2);
+    border: 2px dashed hsl(var(--primary));
+    border-radius: 8px;
+    opacity: 0.2;
+    transition-duration: 100ms;
+    z-index: 2;
+    user-select: none;
   }
 }
