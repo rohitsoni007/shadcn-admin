@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,7 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLogin } from '@/hooks/use-auth';
 import { useToast } from '@/components/ui/use-toast';
-import { LoginCredentials } from '@/types/auth';
+import type { LoginCredentials } from '@/types/auth';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -39,8 +39,8 @@ export function LoginForm({ onSuccess, onForgotPassword }: LoginFormProps) {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: 'test@yopmail.com',
+      password: '123456',
       rememberMe: false,
     },
   });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -44,8 +44,8 @@ export function PasswordResetConfirmForm({ token, onSuccess, onBack }: PasswordR
   } = useForm<PasswordResetConfirmFormData>({
     resolver: zodResolver(passwordResetConfirmSchema),
     defaultValues: {
-      newPassword: '',
-      confirmPassword: '',
+      newPassword: 'Test@123',
+      confirmPassword: 'Test@123',
     },
   });
 
@@ -89,14 +89,20 @@ export function PasswordResetConfirmForm({ token, onSuccess, onBack }: PasswordR
 
   const passwordStrength = getPasswordStrength(newPassword);
   const strengthLabels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
-  const strengthColors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500'];
+  const strengthColors = [
+    'bg-red-500 dark:bg-red-600', 
+    'bg-orange-500 dark:bg-orange-600', 
+    'bg-yellow-500 dark:bg-yellow-600', 
+    'bg-blue-500 dark:bg-blue-600', 
+    'bg-green-500 dark:bg-green-600'
+  ];
 
   if (isSuccess) {
     return (
       <Card className="w-full max-w-md mx-auto">
         <CardHeader className="space-y-1 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-            <CheckCircle className="h-6 w-6 text-green-600" />
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
+            <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
           </div>
           <CardTitle className="text-2xl font-bold">Password Reset Complete</CardTitle>
           <CardDescription>
@@ -161,7 +167,7 @@ export function PasswordResetConfirmForm({ token, onSuccess, onBack }: PasswordR
                       className={`h-2 w-full rounded ${
                         level <= passwordStrength
                           ? strengthColors[passwordStrength - 1]
-                          : 'bg-gray-200'
+                          : 'bg-gray-200 dark:bg-gray-700'
                       }`}
                     />
                   ))}

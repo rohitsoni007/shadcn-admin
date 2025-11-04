@@ -1,6 +1,5 @@
-import { createRootRoute, Outlet } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/router-devtools'
-import { ThemeProvider } from 'next-themes'
+import { createRootRoute, Outlet, useLocation } from '@tanstack/react-router'
+// import { TanStackRouterDevtools } from '@tanstack/router-devtools'
 import { AppShell, AppSidebar, AppHeader, MobileNavigation } from '@/components/layout'
 import { AuthRouteWrapper, SessionTimeout } from '@/components/auth'
 import { Toaster } from '@/components/ui/toaster'
@@ -8,35 +7,35 @@ import { useIsMobile } from '@/hooks/use-mobile'
 
 function RootComponent() {
   const isMobile = useIsMobile()
+  const location = useLocation()
+
+  // Define authentication routes that should not have layout
+  const authRoutes = ['/login', '/register', '/forgot-password', '/password-reset']
+  const isAuthRoute = authRoutes.includes(location.pathname)
 
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
-    >
-      <AuthRouteWrapper>
-        <AppShell
-          sidebar={!isMobile ? <AppSidebar /> : undefined}
-          header={<AppHeader />}
-        >
-          <Outlet />
-        </AppShell>
-        
-        {/* Mobile Navigation */}
-        <MobileNavigation />
-        
-        {/* Session Management */}
-        <SessionTimeout warningTime={5} sessionTimeout={30} />
-      </AuthRouteWrapper>
-      
-      {/* Toast Notifications */}
+    <AuthRouteWrapper>
+      {isAuthRoute ? (
+        <Outlet />
+      ) : (
+        <>
+          <AppShell
+            sidebar={!isMobile ? <AppSidebar /> : undefined}
+            header={<AppHeader />}
+          >
+            <Outlet />
+          </AppShell>
+
+          <MobileNavigation />
+
+          <SessionTimeout warningTime={5} sessionTimeout={30} />
+        </>
+      )}
+
       <Toaster />
-      
-      {/* Development Tools */}
-      <TanStackRouterDevtools />
-    </ThemeProvider>
+
+      {/* <TanStackRouterDevtools /> */}
+    </AuthRouteWrapper>
   )
 }
 

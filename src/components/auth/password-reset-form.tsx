@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -34,7 +34,7 @@ export function PasswordResetForm({ onBack, onSuccess }: PasswordResetFormProps)
   } = useForm<PasswordResetFormData>({
     resolver: zodResolver(passwordResetSchema),
     defaultValues: {
-      email: '',
+      email: 'test@yopmail.com',
     },
   });
 
@@ -79,8 +79,8 @@ export function PasswordResetForm({ onBack, onSuccess }: PasswordResetFormProps)
     return (
       <Card className="w-full max-w-md mx-auto">
         <CardHeader className="space-y-1 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-            <Mail className="h-6 w-6 text-green-600" />
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
+            <Mail className="h-6 w-6 text-green-600 dark:text-green-400" />
           </div>
           <CardTitle className="text-2xl font-bold">Check your email</CardTitle>
           <CardDescription>
@@ -91,7 +91,7 @@ export function PasswordResetForm({ onBack, onSuccess }: PasswordResetFormProps)
           <p className="text-sm text-muted-foreground text-center">
             Didn't receive the email? Check your spam folder or try again.
           </p>
-          
+
           <div className="space-y-2">
             <Button
               type="button"
@@ -109,7 +109,7 @@ export function PasswordResetForm({ onBack, onSuccess }: PasswordResetFormProps)
                 'Resend email'
               )}
             </Button>
-            
+
             <Button
               type="button"
               variant="ghost"
@@ -164,7 +164,7 @@ export function PasswordResetForm({ onBack, onSuccess }: PasswordResetFormProps)
                 'Send reset link'
               )}
             </Button>
-            
+
             <Button
               type="button"
               variant="ghost"

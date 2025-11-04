@@ -1,17 +1,15 @@
 import React from 'react'
-import { Link, useLocation } from '@tanstack/react-router'
-import { 
-  Bell, 
-  Search, 
-  User, 
-  Settings, 
-  LogOut, 
-  Moon, 
-  Sun, 
+import { Link, useLocation, useNavigate } from '@tanstack/react-router'
+import {
+  Search,
+  User,
+  LogOut,
+  Moon,
+  Sun,
   Monitor,
-  Menu,
 } from 'lucide-react'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { useAuth } from '@/hooks/use-auth'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -31,11 +29,11 @@ import {
 } from '@/components/ui/dropdown-menu'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
+
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
 import { useTheme } from 'next-themes'
-import { GlobalSearch, SearchTrigger } from '@/components/search'
+
 import { NotificationPanel } from '@/components/notifications'
 import { cn } from '@/lib/utils'
 
@@ -50,20 +48,24 @@ interface AppHeaderProps {
   className?: string
 }
 
-// Mock user data - in a real app this would come from auth context
-const mockUser = {
-  name: 'John Doe',
-  email: 'john.doe@example.com',
-  avatar: '',
-  initials: 'JD',
+// Get user initials from name
+const getUserInitials = (name: string) => {
+  return name
+    .split(' ')
+    .map(part => part.charAt(0))
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
 }
 
 
 
 export function AppHeader({ breadcrumbs, actions, className }: AppHeaderProps) {
   const location = useLocation()
-  const { setTheme } = useTheme()
-  const [searchOpen, setSearchOpen] = React.useState(false)
+  const navigate = useNavigate()
+  const { theme, setTheme } = useTheme()
+  const { logout, user } = useAuth()
+
   const [notificationsOpen, setNotificationsOpen] = React.useState(false)
   const isMobile = useIsMobile()
 
@@ -80,7 +82,7 @@ export function AppHeader({ breadcrumbs, actions, className }: AppHeaderProps) {
     pathSegments.forEach((segment, index) => {
       currentPath += `/${segment}`
       const isLast = index === pathSegments.length - 1
-      
+
       // Capitalize and format segment
       const label = segment
         .split('-')
@@ -98,22 +100,33 @@ export function AppHeader({ breadcrumbs, actions, className }: AppHeaderProps) {
 
 
 
-  const handleLogout = () => {
-    // Implement logout functionality
-    console.log('Logout clicked')
+  const handleLogout = async () => {
+    try {
+      await logout()
+      navigate({ to: '/login' })
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
+  }
+
+  const cycleTheme = () => {
+    const themes = ['light', 'dark', 'system'] as const
+    const currentIndex = themes.indexOf(theme as typeof themes[number])
+    const nextIndex = (currentIndex + 1) % themes.length
+    setTheme(themes[nextIndex])
   }
 
   return (
-    <div className={`sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 ${className}`}>
+    <div className={`sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 ${className}`}>
       <div className="flex h-14 items-center gap-4 px-4 lg:px-6">
         {/* Sidebar trigger and breadcrumbs */}
         <div className="flex items-center gap-2 flex-1">
-          <SidebarTrigger 
-            className="-ml-1" 
+          <SidebarTrigger
+            className="-ml-1"
             aria-label="Toggle navigation sidebar"
           />
           <Separator orientation="vertical" className="mr-2 h-4" />
-          
+
           <nav aria-label="Breadcrumb navigation" className="hidden md:flex">
             <Breadcrumb>
               <BreadcrumbList>
@@ -122,7 +135,7 @@ export function AppHeader({ breadcrumbs, actions, className }: AppHeaderProps) {
                     <BreadcrumbItem>
                       {item.path && index < generatedBreadcrumbs.length - 1 ? (
                         <BreadcrumbLink asChild>
-                          <Link 
+                          <Link
                             to={item.path}
                             aria-label={`Navigate to ${item.label}`}
                           >
@@ -146,12 +159,15 @@ export function AppHeader({ breadcrumbs, actions, className }: AppHeaderProps) {
         {/* Search bar - hidden on mobile */}
         {!isMobile && (
           <div className="flex flex-1 justify-center max-w-sm mx-auto">
-            <SearchTrigger
-              onClick={() => setSearchOpen(true)}
-              className="w-full"
-              placeholder="Search pages, users, settings..."
-              aria-label="Open search dialog"
-            />
+            <div className="relative w-full">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search pages, users, settings..."
+                className="w-full h-9 pl-8 pr-3 text-sm bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                aria-label="Search (disabled)"
+              />
+            </div>
           </div>
         )}
 
@@ -162,124 +178,97 @@ export function AppHeader({ breadcrumbs, actions, className }: AppHeaderProps) {
 
           {/* Search button for mobile */}
           {isMobile && (
-            <SearchTrigger
-              variant="button"
-              onClick={() => setSearchOpen(true)}
-              aria-label="Open search dialog"
+            <Button
+              variant="ghost"
+              size="icon"
               className="h-9 w-9"
-            />
+              aria-label="Search (disabled)"
+            >
+              <Search className="h-4 w-4" />
+            </Button>
           )}
 
           {/* Notifications */}
-          <NotificationPanel 
-            open={notificationsOpen} 
-            onOpenChange={setNotificationsOpen} 
+          <NotificationPanel
+            open={notificationsOpen}
+            onOpenChange={setNotificationsOpen}
           />
 
           {/* Theme toggle - hidden on mobile to save space */}
           {!isMobile && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  aria-label="Toggle theme menu"
-                >
-                  <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                  <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                  <span className="sr-only">Toggle theme</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" aria-label="Theme options">
-                <DropdownMenuItem 
-                  onClick={() => setTheme('light')}
-                  aria-label="Switch to light theme"
-                >
-                  <Sun className="mr-2 h-4 w-4" />
-                  <span>Light</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => setTheme('dark')}
-                  aria-label="Switch to dark theme"
-                >
-                  <Moon className="mr-2 h-4 w-4" />
-                  <span>Dark</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => setTheme('system')}
-                  aria-label="Use system theme"
-                >
-                  <Monitor className="mr-2 h-4 w-4" />
-                  <span>System</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={cycleTheme}
+              aria-label={`Current theme: ${theme || 'system'}. Click to cycle themes`}
+            >
+              {theme === 'light' && <Sun className="h-4 w-4" />}
+              {theme === 'dark' && <Moon className="h-4 w-4" />}
+              {(theme === 'system' || !theme) && <Monitor className="h-4 w-4" />}
+              <span className="sr-only">Toggle theme</span>
+            </Button>
           )}
 
           {/* User menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 className={cn(
                   "relative rounded-full",
                   isMobile ? "h-9 w-9" : "h-8 w-8"
                 )}
-                aria-label={`User menu for ${mockUser.name}`}
+                aria-label={`User menu for ${user?.name || 'User'}`}
               >
                 <Avatar className={isMobile ? "h-9 w-9" : "h-8 w-8"}>
-                  <AvatarImage src={mockUser.avatar} alt={`${mockUser.name}'s avatar`} />
-                  <AvatarFallback>{mockUser.initials}</AvatarFallback>
+                  <AvatarImage src={user?.avatar} alt={`${user?.name || 'User'}'s avatar`} />
+                  <AvatarFallback>{user?.name ? getUserInitials(user.name) : 'U'}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent 
-              className="w-56" 
-              align="end" 
+            <DropdownMenuContent
+              className="w-56"
+              align="end"
               forceMount
               aria-label="User account menu"
             >
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{mockUser.name}</p>
+                  <p className="text-sm font-medium leading-none">{user?.name || 'User'}</p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    {mockUser.email}
+                    {user?.email || 'user@example.com'}
                   </p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem aria-label="View profile">
-                <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
-              </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link to="/settings" aria-label="Open settings">
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
+                <Link to="/account" aria-label="View account">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Account</span>
                 </Link>
               </DropdownMenuItem>
+
               {/* Theme toggle for mobile users */}
               {isMobile && (
                 <>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={() => setTheme('light')}
-                    aria-label="Switch to light theme"
+                  <DropdownMenuItem
+                    onClick={cycleTheme}
+                    aria-label={`Current theme: ${theme || 'system'}. Click to cycle themes`}
                   >
-                    <Sun className="mr-2 h-4 w-4" />
-                    <span>Light Theme</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setTheme('dark')}
-                    aria-label="Switch to dark theme"
-                  >
-                    <Moon className="mr-2 h-4 w-4" />
-                    <span>Dark Theme</span>
+                    {theme === 'light' && <Sun className="mr-2 h-4 w-4" />}
+                    {theme === 'dark' && <Moon className="mr-2 h-4 w-4" />}
+                    {(theme === 'system' || !theme) && <Monitor className="mr-2 h-4 w-4" />}
+                    <span>
+                      {theme === 'light' && 'Light Theme'}
+                      {theme === 'dark' && 'Dark Theme'}
+                      {(theme === 'system' || !theme) && 'System Theme'}
+                    </span>
                   </DropdownMenuItem>
                 </>
               )}
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={handleLogout}
                 aria-label="Log out of account"
               >
@@ -291,8 +280,7 @@ export function AppHeader({ breadcrumbs, actions, className }: AppHeaderProps) {
         </div>
       </div>
 
-      {/* Global Search Dialog */}
-      <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
+
     </div>
   )
 }

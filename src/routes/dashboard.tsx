@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Edit, Plus, RotateCcw } from 'lucide-react';
-import { DashboardGrid, GridContainer, WidgetFactory } from '@/components/dashboard';
+import { DashboardGrid, WidgetFactory } from '@/components/dashboard';
 import { useDashboardLayout } from '@/hooks/use-dashboard-layout';
 import type { WidgetConfig } from '@/types/dashboard';
 
@@ -130,63 +130,61 @@ function Dashboard() {
   };
 
   return (
-    <GridContainer>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground">
-              Welcome to your admin dashboard. Here you can view key metrics and manage your system.
-            </p>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleAddWidget}
-              disabled={!isEditing}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Widget
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={resetLayout}
-            >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Reset
-            </Button>
-            <Button
-              variant={isEditing ? "default" : "outline"}
-              size="sm"
-              onClick={toggleEditMode}
-            >
-              <Edit className="h-4 w-4 mr-2" />
-              {isEditing ? 'Done' : 'Edit'}
-            </Button>
-          </div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Welcome to your admin dashboard. Here you can view key metrics and manage your system.
+          </p>
         </div>
 
-        <DashboardGrid
-          widgets={widgets}
-          onLayoutChange={updateLayout}
-          editable={isEditing}
-          className="min-h-[600px]"
-        >
-          {widgets.map((widget) => (
-            <div key={widget.id}>
-              <WidgetFactory
-                widget={widget}
-                onRemove={removeWidget}
-                showDragHandle={isEditing}
-                showActions={isEditing}
-              />
-            </div>
-          ))}
-        </DashboardGrid>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleAddWidget}
+            disabled={!isEditing}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Widget
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={resetLayout}
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Reset
+          </Button>
+          <Button
+            variant={isEditing ? "default" : "outline"}
+            size="sm"
+            onClick={toggleEditMode}
+          >
+            <Edit className="h-4 w-4 mr-2" />
+            {isEditing ? 'Done' : 'Edit'}
+          </Button>
+        </div>
       </div>
-    </GridContainer>
+
+      <DashboardGrid
+        widgets={widgets}
+        onLayoutChange={updateLayout}
+        editable={isEditing}
+        className="min-h-[600px]"
+      >
+        {widgets.map((widget) => (
+          <div key={widget.id}>
+            <WidgetFactory
+              widget={widget}
+              onRemove={removeWidget}
+              showDragHandle={isEditing}
+              showActions={isEditing}
+            />
+          </div>
+        ))}
+      </DashboardGrid>
+    </div>
   );
 }
