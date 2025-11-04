@@ -1,0 +1,466 @@
+import * as React from 'react'
+import { z } from 'zod'
+import { FormSubmissionHandler } from './form-submission-handler'
+import { CommonValidations } from '@/lib/form-validation'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+
+// Example form schemas for different scenarios
+const contactFormSchema = z.object({
+  name: CommonValidations.requiredString('Name is required'),
+  email: CommonValidations.email(),
+  subject: CommonValidations.requiredString('Subject is required'),
+  message: z.string().min(10, 'Message must be at least 10 characters'),
+  priority: z.enum(['low', 'medium', 'high']),
+  attachments: z.array(z.instanceof(File)).optional(),
+  newsletter: z.boolean(),
+})
+
+const feedbackFormSchema = z.object({
+  rating: z.number().min(1).max(5),
+  category: z.enum(['bug', 'feature', 'improvement', 'other']),
+  title: CommonValidations.requiredString('Title is required'),
+  description: z.string().min(20, 'Description must be at least 20 characters'),
+  reproductionSteps: z.string().optional(),
+  expectedBehavior: z.string().optional(),
+  actualBehavior: z.string().optional(),
+  browserInfo: z.string().optional(),
+  screenshot: CommonValidations.imageFile(5).optional(),
+})
+
+const surveyFormSchema = z.object({
+  age: z.number().min(13).max(120),
+  gender: z.enum(['male', 'female', 'other', 'prefer-not-to-say']),
+  occupation: CommonValidations.requiredString('Occupation is required'),
+  experience: z.enum(['beginner', 'intermediate', 'advanced', 'expert']),
+  satisfaction: z.number().min(1).max(10),
+  recommendations: z.string().optional(),
+  improvements: z.array(z.string()).optional(),
+  wouldRecommend: z.boolean(),
+  additionalComments: z.string().optional(),
+})
+
+type ContactFormData = z.infer<typeof contactFormSchema>
+type FeedbackFormData = z.infer<typeof feedbackFormSchema>
+type SurveyFormData = z.infer<typeof surveyFormSchema>
+
+// Simulate different API scenarios
+const simulateApiCall = async <T,>(
+  data: T, 
+  scenario: 'success' | 'error' | 'slow' | 'timeout' = 'success'
+): Promise<{ id: string; data: T }> => {
+  const delay = scenario === 'slow' ? 5000 : scenario === 'timeout' ? 10000 : 2000
+
+  await new Promise(resolve => setTimeout(resolve, delay))
+
+  if (scenario === 'error') {
+    throw new Error('Server error: Unable to process your request')
+  }
+
+  if (scenario === 'timeout') {
+    throw new Error('Request timeout: Please try again')
+  }
+
+  return {
+    id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    data,
+  }
+}
+
+export function ExampleSubmissionForm() {
+  const [apiScenario, setApiScenario] = React.useState<'success' | 'error' | 'slow' | 'timeout'>('success')
+
+  // Contact Form Configuration
+  const contactFormFields = [
+    {
+      name: 'name',
+      label: 'Full Name',
+      type: 'text' as const,
+      placeholder: 'Enter your full name',
+      required: true,
+    },
+    {
+      name: 'email',
+      label: 'Email Address',
+      type: 'email' as const,
+      placeholder: 'Enter your email address',
+      required: true,
+    },
+    {
+      name: 'subject',
+      label: 'Subject',
+      type: 'text' as const,
+      placeholder: 'What is this about?',
+      required: true,
+    },
+    {
+      name: 'priority',
+      label: 'Priority',
+      type: 'select' as const,
+      options: [
+        { value: 'low', label: 'Low Priority' },
+        { value: 'medium', label: 'Medium Priority' },
+        { value: 'high', label: 'High Priority' },
+      ],
+      required: true,
+    },
+    {
+      name: 'message',
+      label: 'Message',
+      type: 'textarea' as const,
+      placeholder: 'Please describe your inquiry in detail...',
+      rows: 4,
+      required: true,
+    },
+    {
+      name: 'attachments',
+      label: 'Attachments',
+      type: 'file' as const,
+      multiple: true,
+      maxFiles: 3,
+      accept: '.pdf,.doc,.docx,.jpg,.jpeg,.png',
+      description: 'Upload up to 3 files (PDF, DOC, or images)',
+    },
+    {
+      name: 'newsletter',
+      label: 'Subscribe to our newsletter for updates',
+      type: 'checkbox' as const,
+    },
+  ]
+
+  // Feedback Form Configuration
+  const feedbackFormFields = [
+    {
+      name: 'rating',
+      label: 'Overall Rating',
+      type: 'number' as const,
+      min: 1,
+      max: 5,
+      placeholder: 'Rate from 1 to 5',
+      required: true,
+    },
+    {
+      name: 'category',
+      label: 'Feedback Category',
+      type: 'select' as const,
+      options: [
+        { value: 'bug', label: 'Bug Report' },
+        { value: 'feature', label: 'Feature Request' },
+        { value: 'improvement', label: 'Improvement Suggestion' },
+        { value: 'other', label: 'Other' },
+      ],
+      required: true,
+    },
+    {
+      name: 'title',
+      label: 'Title',
+      type: 'text' as const,
+      placeholder: 'Brief title for your feedback',
+      required: true,
+    },
+    {
+      name: 'description',
+      label: 'Description',
+      type: 'textarea' as const,
+      placeholder: 'Detailed description of your feedback...',
+      rows: 4,
+      required: true,
+    },
+    {
+      name: 'reproductionSteps',
+      label: 'Steps to Reproduce (for bugs)',
+      type: 'textarea' as const,
+      placeholder: '1. Go to...\n2. Click on...\n3. See error...',
+      rows: 3,
+      dependencies: [{ field: 'category', value: 'bug' }],
+    },
+    {
+      name: 'expectedBehavior',
+      label: 'Expected Behavior',
+      type: 'textarea' as const,
+      placeholder: 'What should happen?',
+      rows: 2,
+      dependencies: [{ field: 'category', value: 'bug' }],
+    },
+    {
+      name: 'actualBehavior',
+      label: 'Actual Behavior',
+      type: 'textarea' as const,
+      placeholder: 'What actually happens?',
+      rows: 2,
+      dependencies: [{ field: 'category', value: 'bug' }],
+    },
+    {
+      name: 'browserInfo',
+      label: 'Browser Information',
+      type: 'text' as const,
+      placeholder: 'e.g., Chrome 91.0.4472.124',
+      dependencies: [{ field: 'category', value: 'bug' }],
+    },
+    {
+      name: 'screenshot',
+      label: 'Screenshot',
+      type: 'file' as const,
+      accept: 'image/*',
+      description: 'Upload a screenshot if applicable (max 5MB)',
+    },
+  ]
+
+  // Survey Form Configuration
+  const surveyFormFields = [
+    {
+      name: 'age',
+      label: 'Age',
+      type: 'number' as const,
+      min: 13,
+      max: 120,
+      placeholder: 'Enter your age',
+      required: true,
+    },
+    {
+      name: 'gender',
+      label: 'Gender',
+      type: 'select' as const,
+      options: [
+        { value: 'male', label: 'Male' },
+        { value: 'female', label: 'Female' },
+        { value: 'other', label: 'Other' },
+        { value: 'prefer-not-to-say', label: 'Prefer not to say' },
+      ],
+      required: true,
+    },
+    {
+      name: 'occupation',
+      label: 'Occupation',
+      type: 'text' as const,
+      placeholder: 'What is your occupation?',
+      required: true,
+    },
+    {
+      name: 'experience',
+      label: 'Experience Level',
+      type: 'radio' as const,
+      options: [
+        { value: 'beginner', label: 'Beginner (0-1 years)' },
+        { value: 'intermediate', label: 'Intermediate (2-5 years)' },
+        { value: 'advanced', label: 'Advanced (6-10 years)' },
+        { value: 'expert', label: 'Expert (10+ years)' },
+      ],
+      required: true,
+    },
+    {
+      name: 'satisfaction',
+      label: 'Satisfaction Score',
+      type: 'number' as const,
+      min: 1,
+      max: 10,
+      placeholder: 'Rate from 1 to 10',
+      required: true,
+    },
+    {
+      name: 'wouldRecommend',
+      label: 'Would you recommend our service to others?',
+      type: 'switch' as const,
+    },
+    {
+      name: 'recommendations',
+      label: 'Recommendations',
+      type: 'textarea' as const,
+      placeholder: 'What would you recommend to improve our service?',
+      rows: 3,
+    },
+    {
+      name: 'additionalComments',
+      label: 'Additional Comments',
+      type: 'textarea' as const,
+      placeholder: 'Any other feedback or comments?',
+      rows: 3,
+    },
+  ]
+
+  const handleContactSubmit = async (data: ContactFormData) => {
+    console.log('Contact form submitted:', data)
+    return simulateApiCall(data, apiScenario)
+  }
+
+  const handleFeedbackSubmit = async (data: FeedbackFormData) => {
+    console.log('Feedback form submitted:', data)
+    return simulateApiCall(data, apiScenario)
+  }
+
+  const handleSurveySubmit = async (data: SurveyFormData) => {
+    console.log('Survey form submitted:', data)
+    return simulateApiCall(data, apiScenario)
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* API Scenario Selector */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Form Submission Testing</CardTitle>
+          <CardDescription>
+            Test different API scenarios to see how the form handles various submission states
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center space-x-2">
+            <span className="text-sm font-medium">API Scenario:</span>
+            {(['success', 'error', 'slow', 'timeout'] as const).map((scenario) => (
+              <Button
+                key={scenario}
+                variant={apiScenario === scenario ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setApiScenario(scenario)}
+              >
+                {scenario === 'success' && '✅ Success'}
+                {scenario === 'error' && '❌ Error'}
+                {scenario === 'slow' && '🐌 Slow (5s)'}
+                {scenario === 'timeout' && '⏰ Timeout (10s)'}
+              </Button>
+            ))}
+          </div>
+          <div className="mt-2">
+            <Badge variant="outline">
+              Current: {apiScenario}
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Form Examples */}
+      <Tabs defaultValue="contact" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="contact">Contact Form</TabsTrigger>
+          <TabsTrigger value="feedback">Feedback Form</TabsTrigger>
+          <TabsTrigger value="survey">Survey Form</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="contact" className="space-y-4">
+          <FormSubmissionHandler
+            schema={contactFormSchema}
+            fields={contactFormFields}
+            defaultValues={{
+              priority: 'medium',
+              newsletter: false,
+            }}
+            onSubmit={handleContactSubmit}
+            title="Contact Us"
+            description="Get in touch with our team. We'll respond within 24 hours."
+            submitText="Send Message"
+            resetText="Clear Form"
+            showDrafts={true}
+            showAnalytics={true}
+            autoSave={true}
+            retryAttempts={3}
+            successMessage={(data) => `Thank you ${data.name}! Your message has been sent successfully.`}
+            errorMessage={(error) => `Failed to send message: ${error.message}`}
+            resetOnSuccess={false}
+          />
+        </TabsContent>
+
+        <TabsContent value="feedback" className="space-y-4">
+          <FormSubmissionHandler
+            schema={feedbackFormSchema}
+            fields={feedbackFormFields}
+            defaultValues={{
+              rating: 5,
+              category: 'improvement',
+            }}
+            onSubmit={handleFeedbackSubmit}
+            title="Feedback Form"
+            description="Help us improve by sharing your feedback and suggestions."
+            submitText="Submit Feedback"
+            resetText="Reset Form"
+            showDrafts={true}
+            showAnalytics={true}
+            autoSave={true}
+            retryAttempts={2}
+            successMessage="Thank you for your feedback! We appreciate your input."
+            errorMessage="Failed to submit feedback. Please try again later."
+            resetOnSuccess={true}
+          />
+        </TabsContent>
+
+        <TabsContent value="survey" className="space-y-4">
+          <FormSubmissionHandler
+            schema={surveyFormSchema}
+            fields={surveyFormFields}
+            defaultValues={{
+              satisfaction: 8,
+              wouldRecommend: true,
+            }}
+            onSubmit={handleSurveySubmit}
+            title="User Experience Survey"
+            description="Help us understand your experience and improve our services."
+            submitText="Complete Survey"
+            resetText="Start Over"
+            showDrafts={true}
+            showAnalytics={true}
+            autoSave={true}
+            retryAttempts={1}
+            successMessage="Survey completed! Thank you for your valuable input."
+            errorMessage="Failed to submit survey. Your responses are saved as a draft."
+            resetOnSuccess={false}
+          />
+        </TabsContent>
+      </Tabs>
+
+      {/* Features Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Form Submission Features</CardTitle>
+          <CardDescription>
+            This implementation demonstrates comprehensive form submission handling
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <h4 className="font-medium mb-2">Submission Handling:</h4>
+              <ul className="space-y-1 text-muted-foreground">
+                <li>• Loading states with progress indicators</li>
+                <li>• Success and error feedback with custom messages</li>
+                <li>• Automatic retry with exponential backoff</li>
+                <li>• Form reset options after successful submission</li>
+                <li>• Submission attempt tracking and statistics</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium mb-2">Draft Management:</h4>
+              <ul className="space-y-1 text-muted-foreground">
+                <li>• Auto-save functionality with configurable delay</li>
+                <li>• Multiple draft versions with timestamps</li>
+                <li>• Draft loading and deletion capabilities</li>
+                <li>• Export form data as JSON</li>
+                <li>• Manual draft saving option</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium mb-2">Analytics & Tracking:</h4>
+              <ul className="space-y-1 text-muted-foreground">
+                <li>• Field interaction tracking</li>
+                <li>• Validation error monitoring</li>
+                <li>• Form completion time measurement</li>
+                <li>• Submit attempt analytics</li>
+                <li>• User behavior insights</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium mb-2">User Experience:</h4>
+              <ul className="space-y-1 text-muted-foreground">
+                <li>• Real-time validation feedback</li>
+                <li>• Conditional field display</li>
+                <li>• Accessible form controls</li>
+                <li>• Responsive design</li>
+                <li>• Toast notifications for feedback</li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
