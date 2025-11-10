@@ -1,8 +1,12 @@
 # Shadcn Admin Panel Template
 
-A comprehensive, production-ready admin panel template built with modern React technologies. This template provides a solid foundation for building admin dashboards with authentication, user management, and customizable widgets.
+Admin Dashboard UI with shadcn/ui (Vite + Typescript)
 
-![Admin Panel Preview](https://via.placeholder.com/800x400/1f2937/ffffff?text=Modern+Admin+Panel)
+## 📸 Screenshot
+
+![shadcn/ui + Vite Admin Panel Template](public/shadcn-admin.png)
+
+A comprehensive, production-ready admin panel template built with modern React technologies. This template provides a solid foundation for building admin dashboards with authentication, user management, and customizable widgets.
 
 ## ✨ Features
 
